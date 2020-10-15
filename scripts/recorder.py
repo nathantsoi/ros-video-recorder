@@ -7,7 +7,7 @@ import time
 
 import rospy
 
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
 
 
