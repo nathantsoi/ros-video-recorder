@@ -22,7 +22,10 @@ def opencv_version():
 
 class VideoFrames:
     def __init__(self, image_topic, target_x, target_y, target_w, target_h):
-        self.image_sub = rospy.Subscriber(image_topic, Image, self.callback_image, queue_size=1)
+        if image_topic.endswith('/compressed'):
+            self.image_sub = rospy.Subscriber(image_topic, CompressedImage, self.callback_image_compressed, queue_size=1)
+        else:
+            self.image_sub = rospy.Subscriber(image_topic, Image, self.callback_image, queue_size=1)
         self.bridge = CvBridge()
         self.frames = []
         self.target_x, self.target_y, self.target_w, self.target_h = target_x, target_y, target_w, target_h
@@ -30,6 +33,15 @@ class VideoFrames:
     def callback_image(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        except CvBridgeError as e:
+            rospy.logerr('[ros-video-recorder][VideoFrames] Converting Image Error. ' + str(e))
+            return
+
+        self.frames.append((time.time(), cv_image))
+
+    def callback_image_compressed(self, data):
+        try:
+            cv_image = self.bridge.compressed_imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             rospy.logerr('[ros-video-recorder][VideoFrames] Converting Image Error. ' + str(e))
             return
